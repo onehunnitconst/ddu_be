@@ -1,0 +1,138 @@
+// 연결 URL은 prisma.config.ts(CLI)와 src/server/db.ts(런타임)에서 설정한다
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// 사용자
+/// 값 도메인(형식) 검사는 마이그레이션 SQL의 CHECK 제약과 src/utils/user-rules.ts가 함께 담당한다
+model User {
+  /// 식별 ID (UUID v7, Prisma Client가 생성)
+  id           String @id @default(uuid(7)) @db.Uuid
+  /// 로그인 ID: 영문 소문자로 시작, 영문 소문자·숫자·_ 4–20자, 중복 불가
+  loginId      String @unique @map("login_id") @db.VarChar(20)
+  /// 패스워드 해시 (평문은 저장하지 않는다)
+  passwordHash String @map("password_hash") @db.VarChar(255)
+  /// 닉네임: 한글·영문·숫자 2–12자, 중복 불가
+  nickname     String @unique @db.VarChar(12)
+
+  refreshTokens    RefreshToken[]
+  questionAttempts QuestionAttempt[]
+
+  @@map("users")
+}
+
+/// 리프레시 토큰 (원문은 쿠키로만 전달하고 DB에는 SHA-256 해시만 저장한다)
+/// 사용할 때마다 폐기 후 새로 발급(rotation)하며, 폐기된 토큰이 다시 오면 탈취로 보고 해당 사용자의 토큰을 모두 폐기한다
+model RefreshToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// 토큰 원문의 SHA-256 (hex)
+  tokenHash String    @unique @map("token_hash") @db.Char(64)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// 문제 형태. 형태마다 content(JSONB) 구조, 보기 번호 표기, 채점 규칙이 다르며
+/// src/utils/question-format/ 의 형태별 모듈이 이를 해석한다
+enum QuestionFormat {
+  /// AWS 자격증: 보기 4–6개(A, B, C…), 영문+한국어, 정답 1–3개(정답 전체를 골라야 정답)
+  AWS_CERT
+  /// 국가기술자격 필기(기사): 4지선다(①②③④), 한국어, 정답 1개(복수정답 인정 시 그중 하나면 정답)
+  KR_TECH_WRITTEN
+
+  @@map("question_format")
+}
+
+/// 자격 종목 (예: saa, soa, electrical-engineer)
+model Subject {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  /// URL에 쓰는 식별자 (/exams/{slug})
+  slug      String   @unique @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  questionSets QuestionSet[]
+
+  @@map("subjects")
+}
+
+/// 문제 묶음: 기사 필기는 회차(예: 2023년 1회), AWS는 출처별 문제 모음
+model QuestionSet {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  subjectId String    @map("subject_id") @db.Uuid
+  title     String    @db.VarChar(100)
+  /// 시행일 (회차가 있는 시험만)
+  heldOn    DateTime? @map("held_on") @db.Date
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  subject   Subject    @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  questions Question[]
+
+  @@unique([subjectId, title])
+  @@map("question_sets")
+}
+
+/// 문제. 형태와 무관한 값은 컬럼으로, 형태별 본문·보기·해설은 content(JSONB)에 둔다
+model Question {
+  id      String         @id @default(uuid(7)) @db.Uuid
+  setId   String         @map("set_id") @db.Uuid
+  /// 묶음 안에서의 문제 번호 (1부터)
+  number  Int
+  format  QuestionFormat
+  /// 묶음 안의 세부 과목 (예: 기사 필기의 "전기자기학"), 없으면 null
+  section String?        @db.VarChar(50)
+  /// 형태별 본문·보기·해설 (구조는 format에 따라 다름)
+  content Json           @db.JsonB
+  /// 정답 보기의 순서 인덱스(0부터). 표기(A/①)는 format에서 만든다
+  answer  Int[]          @db.SmallInt
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  set      QuestionSet       @relation(fields: [setId], references: [id], onDelete: Cascade)
+  attempts QuestionAttempt[]
+
+  @@unique([setId, number])
+  @@map("questions")
+}
+
+/// 풀이 결과
+enum AttemptResult {
+  CORRECT
+  INCORRECT
+  /// "모르겠어요"를 눌러 정답을 확인함
+  DONT_KNOW
+
+  @@map("attempt_result")
+}
+
+/// 풀이 기록: 사용자가 문제를 한 번 풀(또는 모르겠다고 할) 때마다 한 행
+model QuestionAttempt {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  userId     String        @map("user_id") @db.Uuid
+  questionId String        @map("question_id") @db.Uuid
+  result     AttemptResult
+  /// 고른 보기 인덱스 (DONT_KNOW면 빈 배열)
+  selected   Int[]         @db.SmallInt
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, questionId])
+  @@index([userId, createdAt])
+  @@map("question_attempts")
+}
