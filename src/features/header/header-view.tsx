@@ -36,7 +36,7 @@ export function HeaderView({
 }: HeaderViewProps) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
+      <div className="flex h-14 items-center gap-6 px-4">
         <Link href="/" className="text-lg font-bold">
           {SITE_NAME}
         </Link>
