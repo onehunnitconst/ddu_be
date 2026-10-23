@@ -1,6 +1,7 @@
 import type { ComponentProps, ElementType } from "react";
 import ReactMarkdown, { type Components, type ExtraProps } from "react-markdown";
 import rehypeKatex from "rehype-katex";
+import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
@@ -51,13 +52,14 @@ const COMPONENTS: Components = {
 
 /**
  * 마크다운(GFM: 표·체크리스트·취소선 포함)을 렌더링한다. raw HTML은 렌더링하지 않는다.
- * 수식은 TeX(KaTeX): 인라인은 `$...$`, 블록은 `$$`를 앞뒤 줄에 따로 둔다. 일반 텍스트의 달러 기호는 `\$`로 쓴다
+ * 수식은 TeX(KaTeX): 인라인은 `$...$`, 블록은 `$$`를 앞뒤 줄에 따로 둔다. 일반 텍스트의 달러 기호는 `\$`로 쓴다.
+ * `**용어(설명)**은`처럼 강조가 문장부호로 끝나고 한글이 바로 붙어도 굵게 되도록 remark-cjk-friendly를 쓴다
  */
 export function Markdown({ text, className }: MarkdownProps) {
   return (
     // 블록 수식이 좁은 카드보다 넓으면 가로로 스크롤한다
     <div className={cn("break-words [&_.katex-display]:my-2 [&_.katex-display]:overflow-x-auto [&_.katex-display]:py-1", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={COMPONENTS}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath, remarkCjkFriendly]} rehypePlugins={[rehypeKatex]} components={COMPONENTS}>
         {text}
       </ReactMarkdown>
     </div>
