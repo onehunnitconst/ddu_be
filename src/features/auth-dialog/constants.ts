@@ -10,14 +10,17 @@ export const AUTH_DIALOG_TEXT = {
   },
   signup: {
     title: "회원가입",
-    description: "가입 후 바로 로그인됩니다.",
-    submit: "가입하기",
+    description: "관리자 승인 후 로그인할 수 있습니다.",
+    submit: "가입 신청",
     switchPrompt: "이미 계정이 있으신가요?",
     switchAction: "로그인",
   },
 } as const satisfies Record<AuthMode, Record<string, string>>;
 
 export const SUBMITTING_LABEL = "처리 중…";
+
+/** 가입 신청 후 로그인 화면으로 돌아가며 보여주는 안내 */
+export const SIGNUP_DONE_NOTICE = "가입 신청이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.";
 
 /** 회원가입 입력란 아래에 보여주는 규칙 (src/utils/user-rules.ts와 같은 내용) */
 export const SIGNUP_HINTS = {

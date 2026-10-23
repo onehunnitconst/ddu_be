@@ -20,6 +20,7 @@ export function AuthDialogView({
   signupValues,
   fieldErrors,
   formError,
+  notice,
   isSubmitting,
   onOpenChange,
   onClosed,
@@ -66,6 +67,12 @@ export function AuthDialogView({
               disabled={isSubmitting}
               onChange={changeSignupField}
             />
+          )}
+
+          {notice && (
+            <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
+              {notice}
+            </p>
           )}
 
           {formError && (

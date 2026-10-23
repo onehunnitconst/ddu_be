@@ -12,7 +12,10 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "users:pending": "tsx prisma/scripts/users.ts pending",
+    "users:approve": "tsx prisma/scripts/users.ts approve",
+    "users:revoke": "tsx prisma/scripts/users.ts revoke"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

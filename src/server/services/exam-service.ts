@@ -70,13 +70,13 @@ export async function getRandomQuestion(
 }
 
 /**
- * 답을 채점하고 정답·해설을 돌려준다. 로그인 사용자(userId)면 풀이 기록에 남긴다.
+ * 답을 채점하고 정답·해설을 돌려주며, 풀이 기록에 남긴다.
  * 정답은 이 응답에서만 내려간다.
  */
 export async function submitAttempt(
   questionId: string,
   rawInput: unknown,
-  userId: string | null,
+  userId: string,
 ): Promise<AttemptResponse> {
   if (!uuidSchema.safeParse(questionId).success) {
     throw notFound("QUESTION_NOT_FOUND", "존재하지 않는 문제입니다.");
@@ -107,16 +107,14 @@ export async function submitAttempt(
   const outcome: AttemptOutcome =
     "dontKnow" in input ? "DONT_KNOW" : result.correct ? "CORRECT" : "INCORRECT";
 
-  if (userId) {
-    await prisma.questionAttempt.create({
-      data: { userId, questionId, result: outcome, selected },
-    });
-  }
+  await prisma.questionAttempt.create({
+    data: { userId, questionId, result: outcome, selected },
+  });
 
   return {
     outcome,
     result: { ...result, correct: outcome === "CORRECT" },
-    recorded: userId !== null,
+    recorded: true,
   };
 }
 

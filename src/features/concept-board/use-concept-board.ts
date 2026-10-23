@@ -1,4 +1,4 @@
-import type { ConceptCard, ConceptCourse } from "@/types/concept";
+import type { ConceptCard, ConceptCourse, ConceptCourseSummary } from "@/types/concept";
 import { COLUMN_TONES, type ColumnTone } from "./constants";
 
 export type ConceptColumn = {
@@ -18,26 +18,24 @@ export type ConceptCourseTab = {
 };
 
 /**
- * 과목 목록을 탭(링크)과 현재 과목의 열(단원, 색상 포함)로 바꾼다.
+ * 과목 목록을 탭(링크)으로, 현재 과목을 열(단원, 색상 포함)로 바꾼다.
  * 상태가 없어 서버 컴포넌트에서도 호출할 수 있다
  */
-export function useConceptBoard(subjectSlug: string, courses: ConceptCourse[], courseId: string) {
-  const tabs: ConceptCourseTab[] = courses.map((course) => ({
-    id: course.id,
-    title: course.title,
-    href: `/concepts/${subjectSlug}/${course.id}`,
-    cardCount: course.chapters.reduce((sum, chapter) => sum + chapter.cards.length, 0),
-    isActive: course.id === courseId,
+export function useConceptBoard(subjectSlug: string, courses: ConceptCourseSummary[], course?: ConceptCourse) {
+  const tabs: ConceptCourseTab[] = courses.map((item) => ({
+    id: item.id,
+    title: item.title,
+    href: `/concepts/${subjectSlug}/${item.id}`,
+    cardCount: item.cardCount,
+    isActive: item.id === course?.id,
   }));
 
-  const columns: ConceptColumn[] = (courses.find((course) => course.id === courseId)?.chapters ?? []).map(
-    (chapter, index) => ({
-      id: chapter.id,
-      title: chapter.title,
-      tone: COLUMN_TONES[index % COLUMN_TONES.length],
-      cards: chapter.cards,
-    }),
-  );
+  const columns: ConceptColumn[] = (course?.chapters ?? []).map((chapter, index) => ({
+    id: chapter.id,
+    title: chapter.title,
+    tone: COLUMN_TONES[index % COLUMN_TONES.length],
+    cards: chapter.cards,
+  }));
 
   return { tabs, columns };
 }

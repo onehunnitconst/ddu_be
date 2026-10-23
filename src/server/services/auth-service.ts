@@ -12,7 +12,7 @@ import {
   hashRefreshToken,
 } from "@/server/auth/refresh-token";
 import { prisma } from "@/server/db";
-import { conflict, unauthorized } from "@/server/errors";
+import { conflict, forbidden, unauthorized } from "@/server/errors";
 import { loginSchema, signupSchema } from "@/server/validators/auth";
 import { parseInput } from "@/server/validators/parse-input";
 import type { AuthUser } from "@/types/auth";
@@ -58,8 +58,11 @@ async function issueTokens(db: Db, userId: string): Promise<AuthTokens> {
 const invalidRefreshToken = () =>
   unauthorized("INVALID_REFRESH_TOKEN", "로그인이 만료되었습니다. 다시 로그인해 주세요.");
 
-/** 회원가입 후 바로 로그인 상태가 되도록 토큰까지 발급한다 */
-export async function signup(rawInput: unknown): Promise<AuthResult> {
+/**
+ * 승인 대기(approvedAt = null) 상태로 가입시킨다. 관리자가 승인하기 전에는 로그인할 수 없으므로
+ * 토큰은 발급하지 않는다 (승인: pnpm users:approve <loginId>)
+ */
+export async function signup(rawInput: unknown): Promise<AuthUser> {
   const input = parseInput(signupSchema, rawInput);
 
   const [loginIdTaken, nicknameTaken] = await Promise.all([
@@ -72,12 +75,9 @@ export async function signup(rawInput: unknown): Promise<AuthResult> {
   const passwordHash = await hashPassword(input.password);
 
   try {
-    return await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: { loginId: input.loginId, passwordHash, nickname: input.nickname },
-        select: authUserSelect,
-      });
-      return { user, tokens: await issueTokens(tx, user.id) };
+    return await prisma.user.create({
+      data: { loginId: input.loginId, passwordHash, nickname: input.nickname },
+      select: authUserSelect,
     });
   } catch (error) {
     // 위 중복 확인과 생성 사이에 같은 값으로 가입한 경우
@@ -93,7 +93,7 @@ export async function login(rawInput: unknown): Promise<AuthResult> {
 
   const user = await prisma.user.findUnique({
     where: { loginId: input.loginId },
-    select: { ...authUserSelect, passwordHash: true },
+    select: { ...authUserSelect, passwordHash: true, approvedAt: true },
   });
 
   const valid = user
@@ -101,6 +101,10 @@ export async function login(rawInput: unknown): Promise<AuthResult> {
     : await verifyDummyPassword(input.password);
   if (!user || !valid) {
     throw unauthorized("INVALID_CREDENTIALS", "아이디 또는 비밀번호가 올바르지 않습니다.");
+  }
+  // 비밀번호가 맞는 경우에만 알려 준다 (다른 사람이 승인 여부를 알아낼 수 없게)
+  if (!user.approvedAt) {
+    throw forbidden("APPROVAL_PENDING", "관리자 승인 후 로그인할 수 있습니다.");
   }
 
   return {
@@ -138,8 +142,9 @@ export async function refresh(refreshToken: string | undefined): Promise<AuthRes
     });
     if (count === 0) return null;
 
+    // 승인이 취소된 사용자는 갱신할 수 없다
     const user = await tx.user.findUnique({
-      where: { id: stored.userId },
+      where: { id: stored.userId, approvedAt: { not: null } },
       select: authUserSelect,
     });
     if (!user) return null;
@@ -164,26 +169,18 @@ export async function logout(refreshToken: string | undefined): Promise<void> {
   });
 }
 
-/** 액세스 토큰으로 현재 사용자를 조회한다 */
+/** 액세스 토큰으로 현재 사용자(승인된 사용자만)를 조회한다. 없거나 만료·무효·미승인이면 401 */
 export async function getCurrentUser(accessToken: string | undefined): Promise<AuthUser> {
   const userId = accessToken ? await verifyAccessToken(accessToken) : null;
   const user = userId
-    ? await prisma.user.findUnique({ where: { id: userId }, select: authUserSelect })
+    ? await prisma.user.findUnique({
+        where: { id: userId, approvedAt: { not: null } },
+        select: authUserSelect,
+      })
     : null;
   if (!user) throw unauthorized("UNAUTHORIZED", "로그인이 필요합니다.");
 
   return user;
-}
-
-/**
- * 로그인하지 않아도 되는 기능용: 토큰이 없으면 null(비로그인),
- * 토큰이 있는데 무효·만료면 401을 던져 클라이언트가 갱신 후 다시 요청하게 한다.
- */
-export async function resolveOptionalUserId(
-  accessToken: string | undefined,
-): Promise<string | null> {
-  if (!accessToken) return null;
-  return (await getCurrentUser(accessToken)).id;
 }
 
 async function revokeAllRefreshTokens(userId: string, now: Date) {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "@/hooks/use-session";
 import { login, signup } from "@/utils/auth-api";
-import type { AuthMode } from "./constants";
+import { SIGNUP_DONE_NOTICE, type AuthMode } from "./constants";
 import {
   EMPTY_LOGIN_VALUES,
   EMPTY_SIGNUP_VALUES,
@@ -27,11 +27,14 @@ export function useAuthDialog({ open, onOpenChange }: UseAuthDialogOptions) {
   const [signupValues, setSignupValues] = useState(EMPTY_SIGNUP_VALUES);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  /** 가입 신청 완료처럼 오류가 아닌 안내 */
+  const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const clearErrors = () => {
     setFieldErrors({});
     setFormError(null);
+    setNotice(null);
   };
 
   /** 닫힘 애니메이션이 끝난 뒤 초기화해, 닫히는 동안 내용이 바뀌어 보이지 않게 한다 */
@@ -78,16 +81,21 @@ export function useAuthDialog({ open, onOpenChange }: UseAuthDialogOptions) {
     setIsSubmitting(true);
     clearErrors();
     try {
-      const user =
-        mode === "login"
-          ? await login(loginValues)
-          : await signup({
-              loginId: signupValues.loginId,
-              password: signupValues.password,
-              nickname: signupValues.nickname,
-            });
-      setUser(user);
-      onOpenChange(false);
+      if (mode === "login") {
+        setUser(await login(loginValues));
+        onOpenChange(false);
+      } else {
+        // 가입 신청은 승인 대기 상태라 로그인되지 않는다: 아이디를 채운 로그인 화면으로 돌아가 안내한다
+        await signup({
+          loginId: signupValues.loginId,
+          password: signupValues.password,
+          nickname: signupValues.nickname,
+        });
+        setMode("login");
+        setLoginValues({ ...EMPTY_LOGIN_VALUES, loginId: signupValues.loginId });
+        setSignupValues(EMPTY_SIGNUP_VALUES);
+        setNotice(SIGNUP_DONE_NOTICE);
+      }
     } catch (error) {
       const next = toFormErrors(error);
       setFieldErrors(next.fieldErrors);
@@ -104,6 +112,7 @@ export function useAuthDialog({ open, onOpenChange }: UseAuthDialogOptions) {
     signupValues,
     fieldErrors,
     formError,
+    notice,
     isSubmitting,
     onOpenChange,
     onClosed: reset,

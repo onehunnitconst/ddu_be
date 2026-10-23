@@ -68,7 +68,7 @@ export function useExamPractice(subjectSlug: string) {
       setPhase("revealed");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        // 리프레시까지 실패: 로그아웃 상태로 바꾸고 다시 제출하면 비로그인으로 채점된다
+        // 리프레시까지 실패: 로그아웃 상태로 바꾸면 페이지가 로그인 화면으로 바뀐다
         setUser(null);
         setMessage(PRACTICE_TEXT.sessionExpired);
       } else {

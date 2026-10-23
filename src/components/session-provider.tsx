@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -14,7 +15,7 @@ import { fetchCurrentUser } from "@/utils/auth-api";
 export type SessionContextValue = {
   status: SessionStatus;
   user: AuthUser | null;
-  /** 로그인·회원가입 성공 시 사용자, 로그아웃 시 null */
+  /** 로그인 시 사용자, 로그아웃·세션 만료 시 null. 페이지는 서버에서 로그인 여부를 확인하므로 다시 그린다 */
   setUser: (user: AuthUser | null) => void;
 };
 
@@ -43,7 +44,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const setUser = useCallback((user: AuthUser | null) => setState(toState(user)), []);
+  const router = useRouter();
+  const setUser = useCallback(
+    (user: AuthUser | null) => {
+      setState(toState(user));
+      router.refresh();
+    },
+    [router],
+  );
   const value = useMemo(() => ({ ...state, setUser }), [state, setUser]);
 
   return <SessionContext value={value}>{children}</SessionContext>;
