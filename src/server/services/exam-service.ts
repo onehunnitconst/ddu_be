@@ -4,6 +4,7 @@ import { randomInt } from "node:crypto";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import { badRequest, notFound } from "@/server/errors";
+import { createAudioUrl } from "@/server/storage";
 import { parseInput } from "@/server/validators/parse-input";
 import { attemptSchema, uuidSchema } from "@/server/validators/exam";
 import type {
@@ -27,6 +28,7 @@ const questionRecordSelect = {
   section: true,
   content: true,
   answer: true,
+  audioPath: true,
   set: { select: { title: true } },
 } as const satisfies Prisma.QuestionSelect;
 
@@ -67,7 +69,9 @@ export async function getRandomQuestion(
     skip: randomInt(count),
     select: questionRecordSelect,
   });
-  return toQuestionView(parseQuestion(row));
+  const view = toQuestionView(parseQuestion(row));
+  const audioUrl = row.audioPath ? await createAudioUrl(row.audioPath) : null;
+  return { ...view, audioUrl };
 }
 
 /**
@@ -172,7 +176,11 @@ export async function getHistory(subjectSlug: string, userId: string): Promise<H
     const question = questionById.get(item.questionId);
     if (!question) continue;
     const { content } = parseQuestion(question);
-    items.push({ ...item, number: question.number, stemPreview: preview(content.stem) });
+    items.push({
+      ...item,
+      number: question.number,
+      stemPreview: preview(content.preview ?? content.stem),
+    });
   }
 
   return {

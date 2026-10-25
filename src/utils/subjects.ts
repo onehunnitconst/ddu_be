@@ -18,6 +18,12 @@ export const SUBJECTS = [
     hasQuestions: true,
   },
   {
+    slug: "toeic-part2",
+    name: "TOEIC Part 2",
+    format: "TOEIC_PART2",
+    hasQuestions: true,
+  },
+  {
     slug: "toeic-part5",
     name: "TOEIC Part 5",
     format: "TOEIC_PART5",

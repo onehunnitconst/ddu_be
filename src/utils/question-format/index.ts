@@ -5,6 +5,7 @@ import type {
 } from "@/types/question";
 import { awsCertFormat } from "./aws-cert";
 import { krTechWrittenFormat } from "./kr-tech-written";
+import { toeicPart2Format } from "./toeic-part2";
 import { toeicPart5Format } from "./toeic-part5";
 import type { NormalizedContent, QuestionFormatSpec } from "./spec";
 
@@ -12,6 +13,7 @@ import type { NormalizedContent, QuestionFormatSpec } from "./spec";
 const FORMATS: { [F in QuestionFormat]: QuestionFormatSpec<unknown> } = {
   AWS_CERT: awsCertFormat as QuestionFormatSpec<unknown>,
   KR_TECH_WRITTEN: krTechWrittenFormat as QuestionFormatSpec<unknown>,
+  TOEIC_PART2: toeicPart2Format as QuestionFormatSpec<unknown>,
   TOEIC_PART5: toeicPart5Format as QuestionFormatSpec<unknown>,
 };
 
@@ -76,8 +78,8 @@ export function parseQuestion(record: QuestionRecord): ParsedQuestion {
   return { record, spec, content };
 }
 
-/** 풀이 화면용 (정답·해설 제외) */
-export function toQuestionView({ record, spec, content }: ParsedQuestion): QuestionView {
+/** 풀이 화면용 (정답·해설 제외). 음원 URL은 서버가 Storage에서 발급해 덧붙인다 */
+export function toQuestionView({ record, spec, content }: ParsedQuestion): Omit<QuestionView, "audioUrl"> {
   return {
     id: record.id,
     number: record.number,

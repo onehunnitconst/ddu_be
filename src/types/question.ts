@@ -4,7 +4,7 @@
  */
 
 /** prisma/schema.prisma의 QuestionFormat과 같은 값 */
-export type QuestionFormat = "AWS_CERT" | "KR_TECH_WRITTEN" | "TOEIC_PART5";
+export type QuestionFormat = "AWS_CERT" | "KR_TECH_WRITTEN" | "TOEIC_PART2" | "TOEIC_PART5";
 
 /** 원문 언어가 형태마다 달라 둘 중 하나 이상만 있다 (AWS: en 필수·ko 번역, 기사: ko만) */
 export type LocalizedText = {
@@ -40,6 +40,8 @@ export type QuestionView = {
   stem: LocalizedText;
   /** 문제에 첨부된 이미지 (표, 다이어그램 등) */
   exhibitImages: string[];
+  /** 문제 음원 재생 URL (일정 시간 뒤 만료되는 signed URL), 음원이 없으면 null */
+  audioUrl: string | null;
   options: QuestionOption[];
   selection: SelectionRule;
 };

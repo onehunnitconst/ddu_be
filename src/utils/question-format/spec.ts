@@ -9,6 +9,8 @@ import type {
 /** 형태별 content를 형태와 무관한 구조로 펼친 결과 */
 export type NormalizedContent = {
   stem: LocalizedText;
+  /** 풀이 기록에 보일 문제 미리보기. 본문만으로 문제를 구분할 수 없는 형태만 둔다 (없으면 stem) */
+  preview?: LocalizedText;
   exhibitImages: string[];
   options: Array<Omit<QuestionOption, "index" | "label">>;
   explanation: LocalizedText | null;

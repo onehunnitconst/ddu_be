@@ -77,6 +77,13 @@ export function ExamPracticeView({
 
       {question.source && <p className="-mt-3 text-xs text-muted-foreground">출처: {question.source}</p>}
 
+      {question.audioUrl && (
+        // key: 문제가 바뀌면 재생 위치·상태를 처음부터 다시 시작한다
+        <audio key={question.id} src={question.audioUrl} controls preload="metadata" className="w-full">
+          {question.number}번 문제 음원
+        </audio>
+      )}
+
       <div className="flex flex-col gap-3 text-base leading-relaxed">
         <RichText text={pickText(question.stem, language)} />
         {question.exhibitImages.map((src) => (
