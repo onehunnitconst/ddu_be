@@ -84,9 +84,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ### Questions (exam data)
 
 - Tables: `subjects` → `question_sets` (a 회차 for 기사 필기, a source collection for AWS) → `questions`.
-- `questions.format` (`AWS_CERT` | `KR_TECH_WRITTEN`) decides the shape of `questions.content` (JSONB), option labels, and grading. Format-independent values are columns: `number`, `section`, `answer` (0-based option indexes, `smallint[]`).
+- `questions.format` (`AWS_CERT` | `KR_TECH_WRITTEN` | `TOEIC_PART5`) decides the shape of `questions.content` (JSONB), option labels, and grading. Format-independent values are columns: `number`, `section`, `answer` (0-based option indexes, `smallint[]`).
 - Never read `content` directly: go through `src/utils/question-format` (`parseQuestion` → `toQuestionView` / `gradeQuestion`). Each format lives in its own module implementing `QuestionFormatSpec`; to add a format, add an enum value + migration, a module, and register it in `index.ts`.
 - Never send `answer`/explanation to the client before the user submits; grade on the server with `gradeQuestion`.
+- Source shown on every question: `QuestionView.source` = question set title · section · N번 (built in `toQuestionView`; the service selects `set.title` with the question).
+- TOEIC (`toeic-part5`): `TOEIC_PART5` holds only Part 5 single-sentence questions (English stem with a `-------` blank, 4 options (A)–(D), 1 answer, Korean explanation written in our own words: reason + `해석:` + optional `어휘:`). Part 6/7 (several questions per passage) do not fit this format. Sets: one per test (`해커스 토익 700+ 실전모의고사`, section `Part 5`, numbers 101–130) or per book chapter (`해커스 토익 RC Grammar · Ch.NN …` / `RC Vocabulary`, section `Hackers Test Part 5`). Source scans/answer books live in git-ignored `temp/`.
 - Seed data: `prisma/seed/data/*.json` (NOT in `public/` — it contains answers). `pnpm db:seed` upserts subjects/sets and inserts missing questions (validated with `parseQuestion`; SOA #210, a hands-on lab, is skipped).
 - Subject list shared by header/pages/seed: `src/utils/subjects.ts`.
 - Exam APIs: `GET /api/exams/[subject]/questions/random?exclude=`, `POST /api/questions/[id]/attempts` (`{ selected }` | `{ dontKnow: true }`; always recorded), `GET /api/exams/[subject]/history` (login required). Attempts are stored per try in `question_attempts`.
