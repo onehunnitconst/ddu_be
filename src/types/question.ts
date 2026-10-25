@@ -4,7 +4,7 @@
  */
 
 /** prisma/schema.prisma의 QuestionFormat과 같은 값 */
-export type QuestionFormat = "AWS_CERT" | "KR_TECH_WRITTEN";
+export type QuestionFormat = "AWS_CERT" | "KR_TECH_WRITTEN" | "TOEIC_PART5";
 
 /** 원문 언어가 형태마다 달라 둘 중 하나 이상만 있다 (AWS: en 필수·ko 번역, 기사: ko만) */
 export type LocalizedText = {
@@ -35,6 +35,8 @@ export type QuestionView = {
   number: number;
   format: QuestionFormat;
   section: string | null;
+  /** 출처: 문제 묶음 제목 · 세부 구분 · 번호 (예: "해커스 토익 700+ 실전모의고사 · Part 5 · 101번") */
+  source: string | null;
   stem: LocalizedText;
   /** 문제에 첨부된 이미지 (표, 다이어그램 등) */
   exhibitImages: string[];

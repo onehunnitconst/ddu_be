@@ -52,6 +52,9 @@ enum QuestionFormat {
   AWS_CERT
   /// 국가기술자격 필기(기사): 4지선다(①②③④), 한국어, 정답 1개(복수정답 인정 시 그중 하나면 정답)
   KR_TECH_WRITTEN
+  /// TOEIC Part 5(단문 빈칸 채우기): 영문 한 문장에 빈칸 하나, 4지선다((A)–(D)), 정답 1개
+  /// 한 지문에 여러 문제가 묶이는 Part 6·7은 이 형태로 담지 않는다
+  TOEIC_PART5
 
   @@map("question_format")
 }

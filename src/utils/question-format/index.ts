@@ -5,12 +5,14 @@ import type {
 } from "@/types/question";
 import { awsCertFormat } from "./aws-cert";
 import { krTechWrittenFormat } from "./kr-tech-written";
+import { toeicPart5Format } from "./toeic-part5";
 import type { NormalizedContent, QuestionFormatSpec } from "./spec";
 
 /** 형태 레지스트리: format 값으로 해당 형태의 규칙을 찾는다 */
 const FORMATS: { [F in QuestionFormat]: QuestionFormatSpec<unknown> } = {
   AWS_CERT: awsCertFormat as QuestionFormatSpec<unknown>,
   KR_TECH_WRITTEN: krTechWrittenFormat as QuestionFormatSpec<unknown>,
+  TOEIC_PART5: toeicPart5Format as QuestionFormatSpec<unknown>,
 };
 
 export function getQuestionFormat(format: QuestionFormat) {
@@ -35,7 +37,13 @@ export type QuestionRecord = {
   section: string | null;
   content: unknown;
   answer: number[];
+  /** 출처 표시용 문제 묶음 (조회 시 함께 가져온 경우) */
+  set?: { title: string };
 };
+
+/** "묶음 제목 · 세부 구분 · N번" (묶음을 모르면 null) */
+const toSource = ({ set, section, number }: QuestionRecord) =>
+  set ? [set.title, section, `${number}번`].filter(Boolean).join(" · ") : null;
 
 export type ParsedQuestion = {
   record: QuestionRecord;
@@ -75,6 +83,7 @@ export function toQuestionView({ record, spec, content }: ParsedQuestion): Quest
     number: record.number,
     format: record.format,
     section: record.section,
+    source: toSource(record),
     stem: content.stem,
     exhibitImages: content.exhibitImages,
     options: content.options.map((option, index) => ({

@@ -18,6 +18,12 @@ export const SUBJECTS = [
     hasQuestions: true,
   },
   {
+    slug: "toeic-part5",
+    name: "TOEIC Part 5",
+    format: "TOEIC_PART5",
+    hasQuestions: true,
+  },
+  {
     slug: "electrical-engineer",
     name: "전기기사 필기",
     format: "KR_TECH_WRITTEN",

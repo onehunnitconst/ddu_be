@@ -27,6 +27,7 @@ const questionRecordSelect = {
   section: true,
   content: true,
   answer: true,
+  set: { select: { title: true } },
 } as const satisfies Prisma.QuestionSelect;
 
 const STEM_PREVIEW_LENGTH = 140;

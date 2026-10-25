@@ -75,6 +75,8 @@ export function ExamPracticeView({
         )}
       </div>
 
+      {question.source && <p className="-mt-3 text-xs text-muted-foreground">출처: {question.source}</p>}
+
       <div className="flex flex-col gap-3 text-base leading-relaxed">
         <RichText text={pickText(question.stem, language)} />
         {question.exhibitImages.map((src) => (
