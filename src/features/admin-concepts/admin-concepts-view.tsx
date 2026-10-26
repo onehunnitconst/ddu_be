@@ -50,7 +50,7 @@ export function AdminConceptsView({
         ) : courses.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">개념 과목이 없습니다.</p>
         ) : (
-          <nav className="flex max-h-[75vh] flex-col gap-3 overflow-y-auto rounded-lg border p-2 text-sm" aria-label="개념 카드">
+          <nav className="flex max-h-[40vh] flex-col gap-3 overflow-y-auto md:max-h-[75vh] rounded-lg border p-2 text-sm" aria-label="개념 카드">
             {courses.map((course) => (
               <details key={course.id} open={courses.length === 1}>
                 <summary className="cursor-pointer rounded-md px-2 py-1 font-semibold hover:bg-muted">

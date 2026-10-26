@@ -12,9 +12,9 @@ type AdminViewProps = {
 /** 관리 화면 공통 틀: 제목과 메뉴(문제 / 개념) */
 export function AdminView({ section, children }: AdminViewProps) {
   return (
-    <div className="flex flex-col gap-6 px-4 py-8">
+    <div className="flex flex-col gap-4 px-4 pt-5 pb-8 sm:gap-6 sm:pt-8">
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className="text-2xl font-bold">관리</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">관리</h1>
         <nav className="flex gap-1" aria-label="관리 메뉴">
           {ADMIN_SECTIONS.map((item) => (
             <Link

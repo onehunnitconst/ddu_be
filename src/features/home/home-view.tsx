@@ -16,9 +16,9 @@ export type HomeSubject = {
 /** 메인 화면: 종목마다 개념·기출로 들어가는 버튼을 격자로 보여준다 */
 export function HomeView({ subjects }: { subjects: HomeSubject[] }) {
   return (
-    <div className="flex flex-col gap-6 px-4 py-8">
+    <div className="flex flex-col gap-4 px-4 pt-5 pb-8 sm:gap-6 sm:pt-8">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">무엇을 공부할까요?</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">무엇을 공부할까요?</h1>
         <p className="text-sm text-muted-foreground">종목을 골라 개념을 정리하거나 기출 문제를 풀어 보세요.</p>
       </div>
 

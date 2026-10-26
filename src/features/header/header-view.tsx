@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LogoMark } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import type { SessionStatus } from "@/types/auth";
 import { cn } from "@/utils/cn";
+import { UserMenu } from "./components/user-menu";
 import { SITE_NAME } from "./constants";
 import type { HeaderMenu } from "./utils/build-menus";
 
@@ -41,8 +43,10 @@ export function HeaderView({
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
       <div className="flex h-14 items-center gap-6 px-4">
-        <Link href="/" className="text-lg font-bold">
-          {SITE_NAME}
+        {/* 모바일에서는 로고 마크만, sm(640px) 이상에서는 사이트 이름도 보여준다 */}
+        <Link href="/" aria-label={SITE_NAME} className="flex shrink-0 items-center gap-2 text-lg font-bold">
+          <LogoMark />
+          <span className="hidden sm:inline">{SITE_NAME}</span>
         </Link>
 
         <NavigationMenu>
@@ -77,17 +81,29 @@ export function HeaderView({
           <ThemeToggle />
           {sessionStatus === "authenticated" && nickname ? (
             <>
-              {isAdmin && (
-                <Button variant="ghost" render={<Link href="/admin" />} nativeButton={false}>
-                  관리
+              {/* sm(640px) 이상: 관리·닉네임·로그아웃을 그대로 늘어놓는다 */}
+              <div className="hidden items-center gap-2 sm:flex">
+                {isAdmin && (
+                  <Button variant="ghost" render={<Link href="/admin" />} nativeButton={false}>
+                    관리
+                  </Button>
+                )}
+                <span className="text-sm whitespace-nowrap">
+                  <span className="font-semibold">{nickname}</span> 님
+                </span>
+                <Button variant="ghost" onClick={onLogoutClick} disabled={isLoggingOut}>
+                  로그아웃
                 </Button>
-              )}
-              <span className="text-sm">
-                <span className="font-semibold">{nickname}</span> 님
-              </span>
-              <Button variant="ghost" onClick={onLogoutClick} disabled={isLoggingOut}>
-                로그아웃
-              </Button>
+              </div>
+              {/* 모바일: 공간이 좁아 사용자 메뉴 하나로 묶는다 */}
+              <div className="sm:hidden">
+                <UserMenu
+                  nickname={nickname}
+                  isAdmin={isAdmin}
+                  isLoggingOut={isLoggingOut}
+                  onLogoutClick={onLogoutClick}
+                />
+              </div>
             </>
           ) : sessionStatus === "unauthenticated" ? (
             <Button variant="ghost" onClick={onLoginClick}>

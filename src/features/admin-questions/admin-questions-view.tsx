@@ -46,7 +46,7 @@ export function AdminQuestionsView(props: AdminQuestionsViewProps) {
         {questions === null ? (
           setId && <p className="py-6 text-center text-sm text-muted-foreground">불러오는 중…</p>
         ) : (
-          <ul className="flex max-h-[70vh] flex-col overflow-y-auto rounded-lg border text-sm">
+          <ul className="flex max-h-[40vh] flex-col overflow-y-auto rounded-lg border text-sm md:max-h-[70vh]">
             {questions.map((item) => (
               <li key={item.id}>
                 <Button

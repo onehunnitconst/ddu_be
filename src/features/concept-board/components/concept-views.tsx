@@ -42,8 +42,12 @@ export function ConceptViews({ title, tabs, columns }: ConceptViewsProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* 전역 헤더(h-14) 바로 아래에 고정. 좌우 여백까지 배경으로 덮어 아래 내용이 비치지 않게 한다 */}
-      <div ref={stickyRef} className="sticky top-14 z-30 -mx-4 flex flex-col gap-4 border-b bg-background px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold">{title} 개념</h1>
+      <div
+        ref={stickyRef}
+        className="sticky top-14 z-30 -mx-4 flex flex-col gap-3 border-b bg-background px-4 pt-4 pb-3 sm:gap-4 sm:pt-6 sm:pb-4"
+      >
+        {/* 모바일에서는 고정 영역이 화면을 덜 차지하도록 제목을 작게, 한 줄로 */}
+        <h1 className="truncate text-xl font-bold sm:text-2xl">{title} 개념</h1>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 max-w-full overflow-x-auto">{tabs}</div>
           {columns.length > 0 && (

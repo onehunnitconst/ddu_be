@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { RichText } from "@/components/rich-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,13 @@ import { LANGUAGE_LABEL, PRACTICE_TEXT } from "./constants";
 import type { ExamPracticeViewModel } from "./use-exam-practice";
 
 type ExamPracticeViewProps = ExamPracticeViewModel;
+
+/**
+ * 제출·모르겠어요·다음 문제 버튼 줄. 모바일에서는 문제가 길어도 스크롤 없이 누를 수 있게 화면 아래에 고정하고
+ * 버튼을 넓게 펼친다 (좌우 -mx-4는 ExamView의 px-4 여백까지 배경으로 덮기 위함)
+ */
+const ACTION_BAR_CLASS =
+  "sticky bottom-0 z-10 -mx-4 flex gap-2 border-t bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur *:flex-1 sm:static sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none sm:*:flex-none";
 
 export function ExamPracticeView({
   phase,
@@ -28,6 +36,14 @@ export function ExamPracticeView({
   next,
   retry,
 }: ExamPracticeViewProps) {
+  const questionId = question?.id;
+
+  // 다음 문제로 넘어가면, 직전 문제의 해설까지 내려가 있던 화면을 맨 위(새 문제의 처음)로 올린다.
+  // 제목·탭이 헤더 아래에 고정되어 있어 문제는 항상 페이지 맨 위에서 시작한다
+  useEffect(() => {
+    if (questionId && window.scrollY > 0) window.scrollTo({ top: 0 });
+  }, [questionId]);
+
   if (phase === "error" || !question) {
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-sm text-muted-foreground">
@@ -119,16 +135,18 @@ export function ExamPracticeView({
             language={language}
             isLoggedIn={isLoggedIn}
           />
-          <Button className="self-end" onClick={next} disabled={phase === "loading"}>
-            {phase === "loading" ? "불러오는 중…" : PRACTICE_TEXT.next}
-          </Button>
+          <div className={ACTION_BAR_CLASS}>
+            <Button size="lg" onClick={next} disabled={phase === "loading"}>
+              {phase === "loading" ? "불러오는 중…" : PRACTICE_TEXT.next}
+            </Button>
+          </div>
         </>
       ) : (
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={dontKnow} disabled={phase !== "answering"}>
+        <div className={ACTION_BAR_CLASS}>
+          <Button size="lg" variant="outline" onClick={dontKnow} disabled={phase !== "answering"}>
             {PRACTICE_TEXT.dontKnow}
           </Button>
-          <Button onClick={submit} disabled={!canSubmit}>
+          <Button size="lg" onClick={submit} disabled={!canSubmit}>
             {phase === "submitting" ? "채점 중…" : PRACTICE_TEXT.submit}
           </Button>
         </div>

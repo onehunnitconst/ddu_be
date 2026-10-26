@@ -20,3 +20,7 @@ export const VIEW_MODES = [
 export type ViewMode = (typeof VIEW_MODES)[number]["value"];
 
 export const DEFAULT_VIEW_MODE: ViewMode = "board";
+
+/** 모바일 첫 방문 기본 보기와 그 기준 너비 (Tailwind sm 미만) */
+export const MOBILE_DEFAULT_VIEW_MODE: ViewMode = "document";
+export const MOBILE_MAX_WIDTH = 639;

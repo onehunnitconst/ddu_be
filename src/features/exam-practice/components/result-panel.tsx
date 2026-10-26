@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { RichText } from "@/components/rich-text";
 import type { AttemptResponse } from "@/types/exam";
 import type { QuestionFormat } from "@/types/question";
@@ -15,12 +16,20 @@ type ResultPanelProps = {
 
 export function ResultPanel({ attempt, format, language, isLoggedIn }: ResultPanelProps) {
   const { outcome, result, recorded } = attempt;
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // 채점 결과가 나타나면 해설까지 보이도록 스크롤한다 (모바일에서는 보기 아래에 가려지기 쉽다).
+  // scroll-mt·scroll-mb는 위에 고정된 헤더·제목·탭과 아래에 고정된 버튼 줄에 가리지 않게 남기는 여백
+  useEffect(() => {
+    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [attempt]);
 
   return (
     <section
+      ref={sectionRef}
       aria-live="polite"
       className={cn(
-        "flex flex-col gap-3 rounded-lg border p-4 text-sm",
+        "flex scroll-mt-44 scroll-mb-24 flex-col gap-3 rounded-lg border p-4 text-sm sm:scroll-mt-48",
         outcome === "CORRECT" && "border-green-600/40 bg-green-50 dark:bg-green-950/30",
         outcome === "INCORRECT" && "border-red-500/40 bg-red-50 dark:bg-red-950/30",
         outcome === "DONT_KNOW" && "bg-muted/50",
