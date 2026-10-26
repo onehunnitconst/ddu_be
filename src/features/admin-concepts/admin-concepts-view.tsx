@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Markdown } from "@/components/markdown";
-import { ImageUploadTextarea } from "@/features/admin/components/image-upload-textarea";
+import { ImageUploadEditor } from "@/features/admin/components/image-upload-editor";
 import { SELECT_CLASS } from "@/features/admin/constants";
 import { cn } from "@/utils/cn";
 import type { AdminConceptsViewModel } from "./use-admin-concepts";
@@ -103,14 +103,15 @@ export function AdminConceptsView({
 
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="card-body">본문 (마크다운 · 수식은 $…$ / $$…$$)</Label>
-                <ImageUploadTextarea
-                  id="card-body"
-                  rows={24}
+                <p className="text-sm leading-none font-medium">본문 (마크다운 · 수식은 $…$ / $$…$$)</p>
+                <ImageUploadEditor
+                  language="markdown"
+                  ariaLabel="본문"
+                  minHeight="32rem"
                   value={draft.body}
                   onValueChange={setBody}
                   formatImage={(url) => `![](${url})`}
-                  aria-invalid={Boolean(fieldErrors.body)}
+                  invalid={Boolean(fieldErrors.body)}
                 />
                 {fieldErrors.body && <p className="text-xs text-destructive">{fieldErrors.body.join(" ")}</p>}
               </div>

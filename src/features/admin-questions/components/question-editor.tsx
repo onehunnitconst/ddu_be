@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ImageUploadTextarea } from "@/features/admin/components/image-upload-textarea";
+import { ImageUploadEditor } from "@/features/admin/components/image-upload-editor";
 import { ExamImage } from "@/features/exam-practice/components/exam-image";
 import type { AdminQuestion } from "@/types/admin";
 import { cn } from "@/utils/cn";
@@ -71,16 +71,16 @@ export function QuestionEditor({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="question-content">content (JSON)</Label>
-        <ImageUploadTextarea
-          id="question-content"
-          rows={16}
-          spellCheck={false}
+        <p className="text-sm leading-none font-medium">content (JSON)</p>
+        <ImageUploadEditor
+          language="json"
+          ariaLabel="content (JSON)"
+          minHeight="22rem"
           value={draft.contentText}
           onValueChange={setContentText}
           formatImage={(url) => JSON.stringify(url)}
           hint="올린 이미지 URL이 커서 위치에 문자열로 들어갑니다. exhibitImages 배열이나 보기의 image에 넣으세요."
-          aria-invalid={Boolean(fieldErrors.content) || preview?.ok === false}
+          invalid={Boolean(fieldErrors.content) || preview?.ok === false}
         />
         <FieldError messages={fieldErrors.content} />
       </div>
