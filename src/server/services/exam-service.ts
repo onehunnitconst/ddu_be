@@ -12,6 +12,9 @@ import type {
   AttemptResponse,
   HistoryItem,
   HistoryResponse,
+  PracticeMode,
+  QuestionReviewResponse,
+  RandomQuestionResponse,
 } from "@/types/exam";
 import type { LocalizedText, QuestionView } from "@/types/question";
 import {
@@ -44,24 +47,56 @@ const questionsOfSubject = (slug: string): Prisma.QuestionWhereInput => ({
   set: { subject: { slug } },
 });
 
-/** 과목에서 문제 하나를 무작위로 고른다. 직전 문제(excludeId)는 가능하면 제외한다 */
+type QuestionRow = Prisma.QuestionGetPayload<{ select: typeof questionRecordSelect }>;
+
+/** 풀이 화면용 문제에 음원 재생 URL을 붙인다 */
+async function toQuestionViewWithAudio(row: QuestionRow): Promise<QuestionView> {
+  const view = toQuestionView(parseQuestion(row));
+  const audioUrl = row.audioPath ? await createAudioUrl(row.audioPath) : null;
+  return { ...view, audioUrl };
+}
+
+/** 사용자가 과목에서 마지막으로 틀렸거나 모른다고 한 문제 (다시 풀어 맞히면 빠진다) */
+async function findWrongQuestionIds(subjectSlug: string, userId: string): Promise<string[]> {
+  const latest = await prisma.questionAttempt.findMany({
+    where: { userId, question: questionsOfSubject(subjectSlug) },
+    orderBy: { createdAt: "desc" },
+    distinct: ["questionId"],
+    select: { questionId: true, result: true },
+  });
+  return latest.filter((attempt) => attempt.result !== "CORRECT").map((attempt) => attempt.questionId);
+}
+
+/**
+ * 과목에서 문제 하나를 무작위로 고른다. 직전 문제(excludeId)는 가능하면 제외한다.
+ * mode가 "wrong"이면 사용자의 오답 중에서만 고른다.
+ */
 export async function getRandomQuestion(
   subjectSlug: string,
-  excludeId: string | null,
-): Promise<QuestionView> {
+  { excludeId, mode, userId }: { excludeId: string | null; mode: PracticeMode; userId: string },
+): Promise<RandomQuestionResponse> {
   assertSubject(subjectSlug);
 
-  const base = questionsOfSubject(subjectSlug);
+  const base: Prisma.QuestionWhereInput =
+    mode === "wrong"
+      ? { id: { in: await findWrongQuestionIds(subjectSlug, userId) } }
+      : questionsOfSubject(subjectSlug);
   const exclude = excludeId && uuidSchema.safeParse(excludeId).success ? excludeId : null;
 
-  let where: Prisma.QuestionWhereInput = exclude ? { ...base, id: { not: exclude } } : base;
-  let count = await prisma.question.count({ where });
-  if (count === 0 && exclude) {
+  const poolSize = await prisma.question.count({ where: base });
+  if (poolSize === 0) {
+    throw mode === "wrong"
+      ? notFound("NO_WRONG_QUESTIONS", "다시 풀 오답이 없습니다. 문제 탭에서 더 풀어 보세요.")
+      : notFound("NO_QUESTIONS", "아직 등록된 문제가 없습니다.");
+  }
+
+  let where: Prisma.QuestionWhereInput = exclude ? { AND: [base, { id: { not: exclude } }] } : base;
+  let count = exclude ? await prisma.question.count({ where }) : poolSize;
+  if (count === 0) {
     // 문제가 하나뿐이면 같은 문제라도 다시 낸다
     where = base;
-    count = await prisma.question.count({ where });
+    count = poolSize;
   }
-  if (count === 0) throw notFound("NO_QUESTIONS", "아직 등록된 문제가 없습니다.");
 
   const row = await prisma.question.findFirstOrThrow({
     where,
@@ -69,9 +104,37 @@ export async function getRandomQuestion(
     skip: randomInt(count),
     select: questionRecordSelect,
   });
-  const view = toQuestionView(parseQuestion(row));
-  const audioUrl = row.audioPath ? await createAudioUrl(row.audioPath) : null;
-  return { ...view, audioUrl };
+  return { question: await toQuestionViewWithAudio(row), poolSize };
+}
+
+/**
+ * 풀이 기록 다시 보기: 문제·정답·해설과 사용자의 풀이 기록.
+ * 정답이 담기므로 사용자가 한 번이라도 푼 문제만 돌려준다.
+ */
+export async function getQuestionReview(questionId: string, userId: string): Promise<QuestionReviewResponse> {
+  const notSolved = () => notFound("QUESTION_NOT_FOUND", "풀이 기록이 있는 문제만 볼 수 있습니다.");
+  if (!uuidSchema.safeParse(questionId).success) throw notSolved();
+
+  const [row, attempts] = await Promise.all([
+    prisma.question.findUnique({ where: { id: questionId }, select: questionRecordSelect }),
+    prisma.questionAttempt.findMany({
+      where: { userId, questionId },
+      orderBy: { createdAt: "desc" },
+      select: { result: true, selected: true, createdAt: true },
+    }),
+  ]);
+  if (!row || attempts.length === 0) throw notSolved();
+
+  const parsed = parseQuestion(row);
+  return {
+    question: await toQuestionViewWithAudio(row),
+    result: gradeQuestion(parsed, attempts[0].selected),
+    attempts: attempts.map((attempt) => ({
+      outcome: attempt.result,
+      selected: attempt.selected,
+      attemptedAt: attempt.createdAt.toISOString(),
+    })),
+  };
 }
 
 /**
@@ -192,4 +255,5 @@ export async function getHistory(subjectSlug: string, userId: string): Promise<H
     },
     items,
   };
+  
 }

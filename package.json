@@ -15,7 +15,10 @@
     "db:seed": "prisma db seed",
     "users:pending": "tsx prisma/scripts/users.ts pending",
     "users:approve": "tsx prisma/scripts/users.ts approve",
-    "users:revoke": "tsx prisma/scripts/users.ts revoke"
+    "users:revoke": "tsx prisma/scripts/users.ts revoke",
+    "users:admins": "tsx prisma/scripts/users.ts admins",
+    "users:admin": "tsx prisma/scripts/users.ts admin",
+    "users:unadmin": "tsx prisma/scripts/users.ts unadmin"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

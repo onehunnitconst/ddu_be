@@ -31,6 +31,7 @@ export function useHeader() {
     menus,
     sessionStatus: status,
     nickname: user?.nickname ?? null,
+    isAdmin: user?.isAdmin ?? false,
     isLoggingOut,
     isAuthDialogOpen,
     setAuthDialogOpen: setIsAuthDialogOpen,

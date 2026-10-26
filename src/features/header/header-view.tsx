@@ -18,6 +18,8 @@ type HeaderViewProps = {
   menus: HeaderMenu[];
   sessionStatus: SessionStatus;
   nickname: string | null;
+  /** 관리자에게만 관리 화면 링크를 보여준다 */
+  isAdmin: boolean;
   isLoggingOut: boolean;
   onLoginClick: () => void;
   onLogoutClick: () => void;
@@ -29,6 +31,7 @@ export function HeaderView({
   menus,
   sessionStatus,
   nickname,
+  isAdmin,
   isLoggingOut,
   onLoginClick,
   onLogoutClick,
@@ -72,6 +75,11 @@ export function HeaderView({
         <div className="ml-auto flex items-center gap-2">
           {sessionStatus === "authenticated" && nickname ? (
             <>
+              {isAdmin && (
+                <Button variant="ghost" render={<Link href="/admin" />} nativeButton={false}>
+                  관리
+                </Button>
+              )}
               <span className="text-sm">
                 <span className="font-semibold">{nickname}</span> 님
               </span>

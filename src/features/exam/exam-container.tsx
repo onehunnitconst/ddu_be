@@ -20,7 +20,8 @@ export function ExamContainer({ subjectSlug, subjectName, hasQuestions }: ExamCo
       hasQuestions={hasQuestions}
       tab={tab}
       onTabChange={setTab}
-      practice={<ExamPracticeContainer subjectSlug={subjectSlug} />}
+      practice={<ExamPracticeContainer subjectSlug={subjectSlug} mode="all" />}
+      wrong={<ExamPracticeContainer subjectSlug={subjectSlug} mode="wrong" />}
       history={<ExamHistoryContainer subjectSlug={subjectSlug} />}
     />
   );

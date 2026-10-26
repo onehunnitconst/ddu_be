@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { HistoryList } from "./components/history-list";
+import { QuestionReviewDialog } from "./components/question-review-dialog";
 import { HistorySummary } from "./components/history-summary";
 import { HISTORY_TEXT } from "./constants";
 import type { ExamHistoryViewModel } from "./use-exam-history";
@@ -13,6 +14,9 @@ export function ExamHistoryView({
   accuracy,
   message,
   retry,
+  review,
+  openReview,
+  closeReview,
 }: ExamHistoryViewProps) {
   if (sessionStatus === "unauthenticated") {
     return (
@@ -44,8 +48,9 @@ export function ExamHistoryView({
       {history.items.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">{HISTORY_TEXT.empty}</p>
       ) : (
-        <HistoryList items={history.items} />
+        <HistoryList items={history.items} onSelect={openReview} />
       )}
+      <QuestionReviewDialog state={review} onClose={closeReview} />
     </div>
   );
 }

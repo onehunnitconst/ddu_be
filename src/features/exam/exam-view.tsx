@@ -9,10 +9,11 @@ type ExamViewProps = {
   onTabChange: (tab: ExamTab) => void;
   /** 탭 내용 (Container가 주입) */
   practice: ReactNode;
+  wrong: ReactNode;
   history: ReactNode;
 };
 
-export function ExamView({ title, hasQuestions, tab, onTabChange, practice, history }: ExamViewProps) {
+export function ExamView({ title, hasQuestions, tab, onTabChange, practice, wrong, history }: ExamViewProps) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
       <h1 className="text-2xl font-bold">{title} 기출</h1>
@@ -27,9 +28,12 @@ export function ExamView({ title, hasQuestions, tab, onTabChange, practice, hist
             ))}
           </TabsList>
           {/* 문제 탭은 탭을 오가도 풀던 문제가 유지되도록 마운트를 유지한다.
-              풀이 기록 탭은 열 때마다 새로 마운트되어 최신 기록을 불러온다 */}
+              오답 풀이·풀이 기록 탭은 열 때마다 새로 마운트되어 최신 기록으로 불러온다 */}
           <TabsContent value="practice" keepMounted className="pt-4">
             {practice}
+          </TabsContent>
+          <TabsContent value="wrong" className="pt-4">
+            {wrong}
           </TabsContent>
           <TabsContent value="history" className="pt-4">
             {history}

@@ -29,3 +29,13 @@ export async function createAudioUrl(path: string): Promise<string> {
   if (error) throw new Error(`failed to sign audio "${path}": ${error.message}`);
   return data.signedUrl;
 }
+
+/** 여러 경로를 한 번에 서명한다. 파일이 없는 경로는 null */
+export async function createAudioUrls(paths: string[]): Promise<Map<string, string | null>> {
+  if (paths.length === 0) return new Map();
+  const { data, error } = await getStorageClient()
+    .storage.from(AUDIO_BUCKET)
+    .createSignedUrls(paths, AUDIO_URL_TTL_SECONDS);
+  if (error) throw new Error(`failed to sign audio: ${error.message}`);
+  return new Map(data.map((item) => [item.path ?? "", item.error ? null : item.signedUrl]));
+}

@@ -2,16 +2,21 @@ import type {
   AttemptRequest,
   AttemptResponse,
   HistoryResponse,
+  PracticeMode,
+  QuestionReviewResponse,
   RandomQuestionResponse,
 } from "@/types/exam";
 import { apiRequest } from "./api-client";
 
-export async function fetchRandomQuestion(subjectSlug: string, excludeId?: string) {
-  const query = excludeId ? `?exclude=${encodeURIComponent(excludeId)}` : "";
-  const { question } = await apiRequest<RandomQuestionResponse>(
-    `/api/exams/${subjectSlug}/questions/random${query}`,
-  );
-  return question;
+export function fetchRandomQuestion(
+  subjectSlug: string,
+  { excludeId, mode = "all" }: { excludeId?: string; mode?: PracticeMode } = {},
+) {
+  const query = new URLSearchParams();
+  if (excludeId) query.set("exclude", excludeId);
+  if (mode !== "all") query.set("mode", mode);
+  const search = query.size > 0 ? `?${query}` : "";
+  return apiRequest<RandomQuestionResponse>(`/api/exams/${subjectSlug}/questions/random${search}`);
 }
 
 export function submitAttempt(questionId: string, body: AttemptRequest) {
@@ -23,4 +28,8 @@ export function submitAttempt(questionId: string, body: AttemptRequest) {
 
 export function fetchHistory(subjectSlug: string) {
   return apiRequest<HistoryResponse>(`/api/exams/${subjectSlug}/history`);
+}
+
+export function fetchQuestionReview(questionId: string) {
+  return apiRequest<QuestionReviewResponse>(`/api/questions/${questionId}`);
 }

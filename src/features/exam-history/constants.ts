@@ -14,4 +14,8 @@ export const HISTORY_TEXT = {
   loginHint: "오른쪽 위의 로그인 버튼을 눌러 주세요.",
   empty: "아직 푼 문제가 없습니다. 문제 탭에서 풀어 보세요.",
   retry: "다시 시도",
+  reviewTitle: "문제 다시 보기",
+  reviewLoading: "문제를 불러오는 중…",
+  reviewFailed: "문제를 불러오지 못했습니다.",
+  reviewAttempts: "풀이 기록",
 } as const;

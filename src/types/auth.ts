@@ -3,6 +3,8 @@ export type AuthUser = {
   id: string;
   loginId: string;
   nickname: string;
+  /** 관리자 (/admin 화면과 관리 API 사용 가능) */
+  isAdmin: boolean;
 };
 
 export type SessionStatus = "loading" | "authenticated" | "unauthenticated";

@@ -13,6 +13,7 @@ type ExamPracticeViewProps = ExamPracticeViewModel;
 export function ExamPracticeView({
   phase,
   question,
+  remainingWrong,
   selected,
   attempt,
   message,
@@ -56,6 +57,9 @@ export function ExamPracticeView({
           <Badge variant="secondary">#{question.number}</Badge>
           {question.selection.mode === "multiple" && (
             <Badge variant="outline">{requiredCount}개 선택</Badge>
+          )}
+          {remainingWrong !== null && (
+            <span className="text-xs text-muted-foreground">남은 오답 {remainingWrong}문제</span>
           )}
         </div>
         {hasKorean && (

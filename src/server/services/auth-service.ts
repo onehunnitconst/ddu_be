@@ -31,7 +31,7 @@ export type AuthResult = {
   tokens: AuthTokens;
 };
 
-const authUserSelect = { id: true, loginId: true, nickname: true } as const;
+const authUserSelect = { id: true, loginId: true, nickname: true, isAdmin: true } as const;
 
 type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -108,7 +108,7 @@ export async function login(rawInput: unknown): Promise<AuthResult> {
   }
 
   return {
-    user: { id: user.id, loginId: user.loginId, nickname: user.nickname },
+    user: { id: user.id, loginId: user.loginId, nickname: user.nickname, isAdmin: user.isAdmin },
     tokens: await issueTokens(prisma, user.id),
   };
 }
@@ -179,6 +179,14 @@ export async function getCurrentUser(accessToken: string | undefined): Promise<A
       })
     : null;
   if (!user) throw unauthorized("UNAUTHORIZED", "로그인이 필요합니다.");
+
+  return user;
+}
+
+/** getCurrentUser + 관리자 확인. 관리자가 아니면 403 */
+export async function requireAdmin(accessToken: string | undefined): Promise<AuthUser> {
+  const user = await getCurrentUser(accessToken);
+  if (!user.isAdmin) throw forbidden("ADMIN_REQUIRED", "관리자만 사용할 수 있습니다.");
 
   return user;
 }

@@ -5,6 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import type { HistoryResponse } from "@/types/exam";
 import { ApiError } from "@/utils/api-client";
 import { fetchHistory } from "@/utils/exam-api";
+import { useQuestionReview } from "./hooks/use-question-review";
 
 type Phase = "loading" | "ready" | "error";
 
@@ -15,6 +16,7 @@ export function useExamHistory(subjectSlug: string) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const { review, openReview, closeReview } = useQuestionReview();
 
   const showHistory = useCallback((next: HistoryResponse) => {
     setHistory(next);
@@ -66,6 +68,9 @@ export function useExamHistory(subjectSlug: string) {
     accuracy,
     message,
     retry,
+    review,
+    openReview,
+    closeReview,
   };
 }
 

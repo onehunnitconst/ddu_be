@@ -9,6 +9,7 @@ export function HeaderContainer() {
     menus,
     sessionStatus,
     nickname,
+    isAdmin,
     isLoggingOut,
     isAuthDialogOpen,
     setAuthDialogOpen,
@@ -21,6 +22,7 @@ export function HeaderContainer() {
       menus={menus}
       sessionStatus={sessionStatus}
       nickname={nickname}
+      isAdmin={isAdmin}
       isLoggingOut={isLoggingOut}
       onLoginClick={openAuthDialog}
       onLogoutClick={() => void logout()}

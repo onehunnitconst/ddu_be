@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/hooks/use-session";
-import type { AttemptRequest, AttemptResponse } from "@/types/exam";
+import type { AttemptRequest, AttemptResponse, PracticeMode, RandomQuestionResponse } from "@/types/exam";
 import type { QuestionView } from "@/types/question";
 import { ApiError } from "@/utils/api-client";
 import { fetchRandomQuestion, submitAttempt } from "@/utils/exam-api";
@@ -19,18 +19,21 @@ import { requiredCount, toggleSelection } from "./utils/selection";
  */
 type Phase = "loading" | "answering" | "submitting" | "revealed" | "error";
 
-export function useExamPractice(subjectSlug: string) {
+/** mode: "all"은 과목 전체에서, "wrong"은 사용자의 오답 중에서 문제를 낸다 */
+export function useExamPractice(subjectSlug: string, mode: PracticeMode) {
   const { status, setUser } = useSession();
 
   const [phase, setPhase] = useState<Phase>("loading");
   const [question, setQuestion] = useState<QuestionView | null>(null);
+  const [poolSize, setPoolSize] = useState<number | null>(null);
   const [selected, setSelected] = useState<number[]>([]);
   const [attempt, setAttempt] = useState<AttemptResponse | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>("ko");
 
-  const showQuestion = useCallback((next: QuestionView) => {
-    setQuestion(next);
+  const showQuestion = useCallback((next: RandomQuestionResponse) => {
+    setQuestion(next.question);
+    setPoolSize(next.poolSize);
     setSelected([]);
     setAttempt(null);
     setPhase("answering");
@@ -44,19 +47,19 @@ export function useExamPractice(subjectSlug: string) {
   // 첫 문제: 응답이 온 뒤에만 상태를 바꾸고, 언마운트 후 도착한 응답은 버린다
   useEffect(() => {
     let ignore = false;
-    fetchRandomQuestion(subjectSlug).then(
+    fetchRandomQuestion(subjectSlug, { mode }).then(
       (next) => !ignore && showQuestion(next),
       (error) => !ignore && showLoadError(error),
     );
     return () => {
       ignore = true;
     };
-  }, [subjectSlug, showQuestion, showLoadError]);
+  }, [subjectSlug, mode, showQuestion, showLoadError]);
 
   const load = (excludeId?: string) => {
     setPhase("loading");
     setMessage(null);
-    fetchRandomQuestion(subjectSlug, excludeId).then(showQuestion, showLoadError);
+    fetchRandomQuestion(subjectSlug, { excludeId, mode }).then(showQuestion, showLoadError);
   };
 
   const send = async (body: AttemptRequest) => {
@@ -83,6 +86,8 @@ export function useExamPractice(subjectSlug: string) {
   return {
     phase,
     question,
+    /** 오답 풀이에서 남은 오답 수 (지금 문제 포함) */
+    remainingWrong: mode === "wrong" ? poolSize : null,
     selected,
     attempt,
     message,

@@ -12,6 +12,7 @@ export function HeaderFallback() {
       menus={buildMenus(null)}
       sessionStatus="loading"
       nickname={null}
+      isAdmin={false}
       isLoggingOut={false}
       onLoginClick={noop}
       onLogoutClick={noop}
