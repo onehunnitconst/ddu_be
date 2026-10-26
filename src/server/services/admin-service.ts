@@ -3,7 +3,7 @@ import "server-only";
 import { revalidateTag } from "next/cache";
 import { prisma } from "@/server/db";
 import { badRequest, notFound } from "@/server/errors";
-import { createAudioUrls } from "@/server/storage";
+import { createAudioUrls, uploadImage } from "@/server/storage";
 import { conceptCardUpdateSchema, questionUpdateSchema } from "@/server/validators/admin";
 import { uuidSchema } from "@/server/validators/exam";
 import { parseInput } from "@/server/validators/parse-input";
@@ -160,4 +160,23 @@ export async function updateConceptCard(cardId: string, rawInput: unknown): Prom
   // 라우트 핸들러에서는 updateTag를 쓸 수 없어, 다음 요청이 바로 새 내용을 읽도록 expire: 0으로 무효화한다
   revalidateTag("concepts", { expire: 0 });
   return card;
+}
+
+/** 올릴 수 있는 이미지 형식 → 확장자 (Storage images 버킷의 허용 형식과 같다) */
+const IMAGE_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/** 문제·개념 카드에 넣을 이미지를 올리고 URL을 돌려준다 */
+export async function uploadAdminImage(file: FormDataEntryValue | null): Promise<string> {
+  if (!(file instanceof File) || file.size === 0) throw badRequest("이미지 파일을 골라 주세요.");
+  const extension = IMAGE_TYPES[file.type];
+  if (!extension) throw badRequest("PNG, JPEG, WebP, GIF 이미지만 올릴 수 있습니다.");
+  if (file.size > MAX_IMAGE_BYTES) throw badRequest("이미지는 5MB 이하만 올릴 수 있습니다.");
+
+  return uploadImage(file, extension);
 }

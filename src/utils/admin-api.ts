@@ -44,3 +44,11 @@ export async function updateAdminConceptCard(cardId: string, body: AdminConceptC
   });
   return card;
 }
+
+/** 이미지를 올리고 공개 URL을 받는다 */
+export async function uploadAdminImage(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  const { url } = await apiRequest<{ url: string }>("/api/admin/images", { method: "POST", body: form });
+  return url;
+}

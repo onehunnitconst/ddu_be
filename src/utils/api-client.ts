@@ -44,16 +44,18 @@ async function toApiError(response: Response) {
   }
 }
 
-/** 같은 출처의 API를 JSON으로 호출한다. 실패 응답은 ApiError로 던진다 */
+/** 같은 출처의 API를 JSON으로 호출한다 (body가 FormData면 multipart로 보낸다). 실패 응답은 ApiError로 던진다 */
 export async function apiRequest<T>(
   path: string,
   { method = "GET", body, retryOnUnauthorized = true }: RequestOptions = {},
 ): Promise<T> {
+  const isForm = body instanceof FormData;
   const send = () =>
     fetch(path, {
       method,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      // FormData는 브라우저가 boundary를 붙인 Content-Type을 직접 정한다
+      headers: body === undefined || isForm ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
 
   let response = await send();

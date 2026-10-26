@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Markdown } from "@/components/markdown";
-import { SELECT_CLASS, TEXTAREA_CLASS } from "@/features/admin/constants";
+import { ImageUploadTextarea } from "@/features/admin/components/image-upload-textarea";
+import { SELECT_CLASS } from "@/features/admin/constants";
 import { cn } from "@/utils/cn";
 import type { AdminConceptsViewModel } from "./use-admin-concepts";
 
@@ -103,13 +104,13 @@ export function AdminConceptsView({
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="card-body">본문 (마크다운 · 수식은 $…$ / $$…$$)</Label>
-                <textarea
+                <ImageUploadTextarea
                   id="card-body"
                   rows={24}
                   value={draft.body}
-                  onChange={(event) => setBody(event.target.value)}
+                  onValueChange={setBody}
+                  formatImage={(url) => `![](${url})`}
                   aria-invalid={Boolean(fieldErrors.body)}
-                  className={TEXTAREA_CLASS}
                 />
                 {fieldErrors.body && <p className="text-xs text-destructive">{fieldErrors.body.join(" ")}</p>}
               </div>
@@ -126,7 +127,7 @@ export function AdminConceptsView({
               {message && (
                 <p
                   role={message.tone === "error" ? "alert" : "status"}
-                  className={cn("mr-auto text-sm", message.tone === "error" ? "text-destructive" : "text-green-700")}
+                  className={cn("mr-auto text-sm", message.tone === "error" ? "text-destructive" : "text-green-700 dark:text-green-400")}
                 >
                   {message.text}
                 </p>

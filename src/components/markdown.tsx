@@ -46,6 +46,11 @@ const COMPONENTS: Components = {
       </div>
     );
   },
+  img: ({ node, alt, ...props }) => {
+    void node;
+    // eslint-disable-next-line @next/next/no-img-element -- 크기를 모르는 본문 이미지(Storage 업로드)라 next/image 대신 사용
+    return <img alt={alt ?? ""} loading="lazy" className="mt-2 h-auto max-w-full rounded-md border bg-white" {...props} />;
+  },
   th: styled("th", "border bg-muted px-2 py-1 text-left font-medium"),
   td: styled("td", "border px-2 py-1"),
 };

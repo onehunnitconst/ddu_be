@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TEXTAREA_CLASS } from "@/features/admin/constants";
+import { ImageUploadTextarea } from "@/features/admin/components/image-upload-textarea";
+import { ExamImage } from "@/features/exam-practice/components/exam-image";
 import type { AdminQuestion } from "@/types/admin";
 import { cn } from "@/utils/cn";
 import { pickText } from "@/utils/localized-text";
@@ -71,14 +72,15 @@ export function QuestionEditor({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="question-content">content (JSON)</Label>
-        <textarea
+        <ImageUploadTextarea
           id="question-content"
           rows={16}
           spellCheck={false}
           value={draft.contentText}
-          onChange={(event) => setContentText(event.target.value)}
+          onValueChange={setContentText}
+          formatImage={(url) => JSON.stringify(url)}
+          hint="올린 이미지 URL이 커서 위치에 문자열로 들어갑니다. exhibitImages 배열이나 보기의 image에 넣으세요."
           aria-invalid={Boolean(fieldErrors.content) || preview?.ok === false}
-          className={TEXTAREA_CLASS}
         />
         <FieldError messages={fieldErrors.content} />
       </div>
@@ -89,6 +91,9 @@ export function QuestionEditor({
         {preview?.ok && (
           <>
             <RichText text={pickText(preview.content.stem, "ko")} className="text-base" />
+            {preview.content.exhibitImages.map((src) => (
+              <ExamImage key={src} src={src} alt="문제 첨부 이미지" />
+            ))}
             <ul className="flex flex-col gap-1.5">
               {preview.content.options.map((option, index) => {
                 const checked = draft.answer.includes(index);
@@ -102,7 +107,12 @@ export function QuestionEditor({
                     >
                       <input type="checkbox" checked={checked} onChange={() => toggleAnswer(index)} className="mt-1" />
                       <span className="w-6 shrink-0 font-semibold">{preview.labels[index]}</span>
-                      <RichText text={pickText(option.text, "ko") || "(음원으로만 제시)"} />
+                      <span className="flex min-w-0 flex-col gap-2">
+                        <RichText
+                          text={pickText(option.text, "ko") || (option.image ? "" : "(음원으로만 제시)")}
+                        />
+                        {option.image && <ExamImage src={option.image} alt={`보기 ${preview.labels[index]} 이미지`} />}
+                      </span>
                     </label>
                   </li>
                 );
@@ -129,7 +139,7 @@ export function QuestionEditor({
         {message && (
           <p
             role={message.tone === "error" ? "alert" : "status"}
-            className={cn("mr-auto text-sm", message.tone === "error" ? "text-destructive" : "text-green-700")}
+            className={cn("mr-auto text-sm", message.tone === "error" ? "text-destructive" : "text-green-700 dark:text-green-400")}
           >
             {message.text}
           </p>

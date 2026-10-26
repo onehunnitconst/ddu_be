@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomInt } from "node:crypto";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import { badRequest, notFound } from "@/server/errors";
@@ -256,4 +257,21 @@ export async function getHistory(subjectSlug: string, userId: string): Promise<H
     items,
   };
   
+}
+
+/** 종목별 문제 수 (메인 화면용). 문제는 가져오기로만 늘어나므로 한 시간 캐시한다 (태그 "questions") */
+export async function countQuestionsBySubject(): Promise<Record<string, number>> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("questions");
+
+  const subjects = await prisma.subject.findMany({
+    select: { slug: true, questionSets: { select: { _count: { select: { questions: true } } } } },
+  });
+  return Object.fromEntries(
+    subjects.map((subject) => [
+      subject.slug,
+      subject.questionSets.reduce((sum, set) => sum + set._count.questions, 0),
+    ]),
+  );
 }

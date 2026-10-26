@@ -13,6 +13,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Package manager: **pnpm** (do not use npm/yarn).
 - UI: Tailwind CSS v4 + shadcn/ui (`pnpm dlx shadcn@latest add <component>` → `src/components/ui/`).
 - Import alias `@/*` → `src/*`. `app/` (App Router) lives at the repo root and only defines routes/pages.
+- Theme: light/dark via the `dark` class on `<html>` (Tailwind `dark:` variant, tokens in `app/globals.css`). An inline script in `app/layout.tsx` (`THEME_INIT_SCRIPT`, `src/utils/theme.ts`) applies the saved choice (localStorage `theme`) or the OS setting before first paint; `ThemeToggle` in the header switches it (`useTheme`). Colors that are not theme tokens need a `dark:` counterpart.
+- Home (`app/page.tsx`, `src/features/home`): a grid with one card per subject and buttons into 개념/기출, showing concept card and question counts (`countQuestionsBySubject`, cached with tag `questions`).
 - App width: `MainLayout` wraps the header and every page in one centered `max-w-6xl` white column on a gray (`bg-muted`) body. Pages don't set their own outer width; full-screen overlays (`fixed inset-x-0`) add `mx-auto w-full max-w-6xl` to stay inside the column.
 
 ### Screen pattern: MVVM + Container-Presentational
@@ -97,6 +99,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Exam APIs: `GET /api/exams/[subject]/questions/random?exclude=&mode=all|wrong` (→ `{ question, poolSize }`; `wrong` = questions whose latest attempt by this user is INCORRECT or DONT_KNOW), `POST /api/questions/[id]/attempts` (`{ selected }` | `{ dontKnow: true }`; always recorded), `GET /api/questions/[id]` (question + answer/explanation + this user's attempts; 404 unless the user has attempted it, since it reveals the answer), `GET /api/exams/[subject]/history` (all login required). Attempts are stored per try in `question_attempts`.
 - Exam UI: page `app/exams/[subject]`, features `exam` (tabs shell), `exam-practice` (문제 탭, and 오답 풀이 탭 with `mode="wrong"`), `exam-history` (풀이 기록 탭; clicking an item opens a review dialog).
 - Admin UI (`app/admin`, features `admin` shell, `admin-questions`, `admin-concepts`): edit a question's section, answer, audio path and raw `content` JSON (checked live with the format spec and again on the server with `parseQuestion`; the audio path must exist in Storage), and a concept card's title and Markdown body (saving calls `revalidateTag("concepts", { expire: 0 })`, so the concept pages update immediately). Editing only; creating or deleting questions and cards is not supported yet.
+- Images uploaded from the admin editors (button, paste or drag-and-drop in `ImageUploadTextarea`, `POST /api/admin/images`, PNG/JPEG/WebP/GIF ≤ 5MB) go to the **public** Supabase Storage bucket `images` as `YYYY/MM/<uuid>.<ext>` and are referenced by their full public URL: `![](url)` in concept Markdown, a URL string in question `content` (`exhibitImages` / option `image`). The bucket is public because cached Markdown can't carry per-request signed URLs; random file names keep URLs unguessable. Don't put anything there that must stay behind login.
 
 ### Concepts (study notes)
 

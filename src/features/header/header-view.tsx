@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -73,6 +74,7 @@ export function HeaderView({
         </NavigationMenu>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
           {sessionStatus === "authenticated" && nickname ? (
             <>
               {isAdmin && (
