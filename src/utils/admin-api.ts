@@ -5,6 +5,7 @@ import type {
   AdminQuestion,
   AdminQuestionSet,
   AdminQuestionUpdate,
+  AdminUser,
 } from "@/types/admin";
 import { apiRequest } from "./api-client";
 
@@ -51,4 +52,17 @@ export async function uploadAdminImage(file: File) {
   form.append("file", file);
   const { url } = await apiRequest<{ url: string }>("/api/admin/images", { method: "POST", body: form });
   return url;
+}
+
+export async function fetchAdminUsers() {
+  const { users } = await apiRequest<{ users: AdminUser[] }>("/api/admin/users");
+  return users;
+}
+
+export async function setAdminUserApproval(userId: string, approved: boolean) {
+  const { user } = await apiRequest<{ user: AdminUser }>(`/api/admin/users/${userId}`, {
+    method: "PATCH",
+    body: { approved },
+  });
+  return user;
 }

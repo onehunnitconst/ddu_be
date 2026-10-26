@@ -1,6 +1,7 @@
 export const ADMIN_SECTIONS = [
   { value: "questions", label: "문제", href: "/admin/questions" },
   { value: "concepts", label: "개념", href: "/admin/concepts" },
+  { value: "users", label: "회원", href: "/admin/users" },
 ] as const;
 
 export type AdminSection = (typeof ADMIN_SECTIONS)[number]["value"];

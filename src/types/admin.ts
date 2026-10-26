@@ -53,3 +53,23 @@ export type AdminConceptCardUpdate = {
   title: string;
   body: string;
 };
+
+/** GET /api/admin/users — 회원 한 명 */
+export type AdminUser = {
+  id: string;
+  loginId: string;
+  nickname: string;
+  isAdmin: boolean;
+  /** 승인 시각, 승인 대기면 null */
+  approvedAt: string | null;
+  /** 가입 시각 (UUID v7 id에 담긴 생성 시각) */
+  createdAt: string;
+  /** 풀이 횟수 (전 과목) */
+  attempts: number;
+  lastAttemptAt: string | null;
+};
+
+/** PATCH /api/admin/users/[id] */
+export type AdminUserUpdate = {
+  approved: boolean;
+};

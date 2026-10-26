@@ -27,3 +27,7 @@ export const conceptCardUpdateSchema = z.object({
   title: z.string().trim().min(1, "제목을 입력해 주세요.").max(200, "200자 이내로 입력해 주세요."),
   body: z.string().max(50_000, "본문이 너무 깁니다."),
 });
+
+export const userUpdateSchema = z.object({
+  approved: z.boolean("승인 여부(approved)를 true/false로 보내 주세요."),
+});
